@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Users as UsersIcon, Shield, Search, Edit2, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
@@ -11,6 +12,7 @@ export default function Users() {
     const [users, setUsers] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const location = useLocation();
 
     // Edit / Create State
     const [editingUser, setEditingUser] = useState<any>(null); // If null, we are creating
@@ -29,6 +31,14 @@ export default function Users() {
     useEffect(() => {
         loadUsers();
     }, []);
+
+    // Handle Quick Actions
+    useEffect(() => {
+        if (location.state && location.state.create) {
+            handleAddNew();
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]);
 
     const loadUsers = async () => {
         try {

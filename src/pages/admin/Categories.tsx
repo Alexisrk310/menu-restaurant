@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Plus, Trash2, List, Search, Edit2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
@@ -16,6 +17,7 @@ export default function Categories() {
     const [searchTerm, setSearchTerm] = useState('');
     const [editingCategory, setEditingCategory] = useState<any>(null);
     const { addToast } = useToast();
+    const location = useLocation();
 
     // Confirmation Modal State
     const [confirmOpen, setConfirmOpen] = useState(false);
@@ -24,6 +26,14 @@ export default function Categories() {
     useEffect(() => {
         loadCategories();
     }, []);
+
+    // Handle Quick Actions
+    useEffect(() => {
+        if (location.state && location.state.create) {
+            handleOpenModal();
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]);
 
     const loadCategories = async () => {
         const data = await api.categories.list(true); // Load ALL categories inc disabled

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Search, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
@@ -23,10 +24,25 @@ export default function Dishes() {
     // Confirmation State
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [dishToDelete, setDishToDelete] = useState<string | null>(null);
+    const location = useLocation();
 
     useEffect(() => {
         loadData();
     }, []);
+
+    // Handle Quick Actions from Dashboard
+    useEffect(() => {
+        if (location.state) {
+            if (location.state.create) {
+                handleAddNew();
+                // Clear state to avoid reopening on refresh
+                window.history.replaceState({}, document.title);
+            } else if (location.state.editDish) {
+                handleEdit(location.state.editDish);
+                window.history.replaceState({}, document.title);
+            }
+        }
+    }, [location]);
 
     const loadData = async () => {
         const [dishesData, catsData] = await Promise.all([

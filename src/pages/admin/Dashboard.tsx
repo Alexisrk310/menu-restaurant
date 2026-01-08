@@ -159,21 +159,21 @@ export default function AdminDashboard() {
                     Gestión Rápida
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <button onClick={() => navigate('/admin/dishes')} className="p-4 bg-white border border-slate-100 rounded-xl hover:shadow-md hover:border-pastel-blue/50 transition-all flex flex-col items-center gap-2 text-center group">
+                    <button onClick={() => navigate('/admin/dishes', { state: { create: true } })} className="p-4 bg-white border border-slate-100 rounded-xl hover:shadow-md hover:border-pastel-blue/50 transition-all flex flex-col items-center gap-2 text-center group">
                         <div className="w-10 h-10 bg-pastel-blue/20 text-pastel-blue rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Utensils size={20} />
                         </div>
                         <span className="font-bold text-charcoal text-sm">Nuevo Plato</span>
                     </button>
 
-                    <button onClick={() => navigate('/admin/categories')} className="p-4 bg-white border border-slate-100 rounded-xl hover:shadow-md hover:border-pastel-pink/50 transition-all flex flex-col items-center gap-2 text-center group">
+                    <button onClick={() => navigate('/admin/categories', { state: { create: true } })} className="p-4 bg-white border border-slate-100 rounded-xl hover:shadow-md hover:border-pastel-pink/50 transition-all flex flex-col items-center gap-2 text-center group">
                         <div className="w-10 h-10 bg-pastel-pink/20 text-pastel-pink rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Tag size={20} />
                         </div>
                         <span className="font-bold text-charcoal text-sm">Nueva Categoría</span>
                     </button>
 
-                    <button onClick={() => navigate('/admin/users')} className="p-4 bg-white border border-slate-100 rounded-xl hover:shadow-md hover:border-pastel-purple/50 transition-all flex flex-col items-center gap-2 text-center group">
+                    <button onClick={() => navigate('/admin/users', { state: { create: true } })} className="p-4 bg-white border border-slate-100 rounded-xl hover:shadow-md hover:border-pastel-purple/50 transition-all flex flex-col items-center gap-2 text-center group">
                         <div className="w-10 h-10 bg-pastel-purple/20 text-pastel-purple rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                             <UserPlus size={20} />
                         </div>
@@ -204,7 +204,7 @@ export default function AdminDashboard() {
                                 <h4 className="font-bold text-charcoal text-sm truncate">{dish.name}</h4>
                                 <p className="text-xs text-slate-500 truncate">{dish.description}</p>
                             </div>
-                            <button onClick={() => navigate('/admin/dishes')} className="text-xs font-bold text-pastel-blue hover:underline">
+                            <button onClick={() => navigate('/admin/dishes', { state: { editDish: dish } })} className="text-xs font-bold text-pastel-blue hover:underline">
                                 Editar
                             </button>
                         </div>

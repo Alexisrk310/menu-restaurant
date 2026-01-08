@@ -61,7 +61,10 @@ export const api = {
             return data?.value || null;
         },
         set: async (key: string, value: any) => {
-            const { data, error } = await supabase.from('settings').upsert({ key, value }).select().single();
+            const { data, error } = await supabase.from('settings').upsert(
+                { key, value },
+                { onConflict: 'key' }
+            ).select().single();
             if (error) throw error;
             return data;
         },

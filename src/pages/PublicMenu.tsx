@@ -12,22 +12,38 @@ export default function PublicMenu() {
     const [dishes, setDishes] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Config State
+    const [isRestaurantOpen, setIsRestaurantOpen] = useState(true);
+    const [announcement, setAnnouncement] = useState('');
+
     useEffect(() => {
         loadData();
-        const catParam = searchParams.get('category');
-        if (catParam) {
-            setActiveCategory(catParam);
-        }
     }, []);
 
     const loadData = async () => {
         try {
-            const [catsData, dishesData] = await Promise.all([
+            const [catsData, dishesData, settingsData] = await Promise.all([
                 api.categories.list(),
-                api.dishes.list()
+                api.dishes.list(),
+                api.settings.getAll()
             ]);
+
+            // Handle Settings
+            if (settingsData) {
+                const isOpen = settingsData.find((s: any) => s.key === 'restaurant_open')?.value ?? true;
+                const ann = settingsData.find((s: any) => s.key === 'global_announcement')?.value ?? '';
+                setIsRestaurantOpen(isOpen);
+                setAnnouncement(ann);
+            }
+
             setCategories([{ id: 'all', name: 'Todos' }, ...catsData]);
             setDishes(dishesData);
+
+            // Set active category from URL if present
+            const catParam = searchParams.get('category');
+            if (catParam) {
+                setActiveCategory(catParam);
+            }
         } catch (error) {
             console.error('Error loading menu:', error);
         } finally {
@@ -70,15 +86,62 @@ export default function PublicMenu() {
     };
 
     if (loading) return (
-        <div className="flex justify-center items-center py-32">
+        <div className="flex justify-center items-center py-32 h-screen">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-charcoal"></div>
         </div>
     );
 
+    // Closed State
+    if (!isRestaurantOpen) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center space-y-6">
+                <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full border border-slate-100"
+                >
+                    <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-400">
+                        <Clock size={40} />
+                    </div>
+                    <h1 className="text-3xl font-display font-bold text-charcoal mb-2">Restaurante Cerrado</h1>
+                    <p className="text-slate-500 mb-6">
+                        En este momento no estamos tomando pedidos. Por favor, vuelve más tarde o revisa nuestro horario de atención.
+                    </p>
+                    {announcement && (
+                        <div className="bg-amber-50 text-amber-800 p-4 rounded-xl text-sm font-medium border border-amber-100">
+                            📢 {announcement}
+                        </div>
+                    )}
+                </motion.div>
+                <div className="text-slate-400 text-sm">
+                    Admin: <a href="/admin" className="underline hover:text-slate-600">Iniciar Sesión</a>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="space-y-10 min-h-screen pb-20">
+        <div className="space-y-10 min-h-screen pb-20 relative">
+            {/* Announcement Banner */}
+            {/* Announcement Banner - Minimalist */}
+            <AnimatePresence>
+                {announcement && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="fixed top-4 left-0 right-0 z-50 flex justify-center pointer-events-none"
+                    >
+                        <div className="bg-white/80 backdrop-blur-md border border-slate-200 shadow-sm px-4 py-2 rounded-full flex items-center gap-2 text-sm text-charcoal max-w-sm pointer-events-auto">
+                            <span className="w-2 h-2 rounded-full bg-pastel-orange animate-pulse"></span>
+                            <span className="font-medium">{announcement}</span>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Header */}
-            <header className="text-center space-y-4 pt-8 md:pt-12">
+            <header className="text-center space-y-4 pt-8 md:pt-12 px-4">
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -97,7 +160,7 @@ export default function PublicMenu() {
             </header>
 
             {/* Category Filter */}
-            <div className="sticky top-20 z-30 bg-cream/95 backdrop-blur-sm py-4 -mx-4 px-4 md:mx-0 md:px-0">
+            <div className="sticky top-0 z-40 bg-cream/95 backdrop-blur-sm py-4 -mx-4 px-4 md:mx-0 md:px-0 transition-all">
                 <div className="flex overflow-x-auto gap-3 pb-2 scrollbar-hide justify-start md:justify-center">
                     {categories.map(cat => (
                         <button
@@ -126,7 +189,7 @@ export default function PublicMenu() {
 
             {/* Menu Grid */}
             <motion.div
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4 md:px-0"
                 variants={container}
                 initial="hidden"
                 animate="show"
