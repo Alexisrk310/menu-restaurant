@@ -161,7 +161,7 @@ export default function PublicMenu() {
 
             {/* Category Filter */}
             <div className="sticky top-0 z-40 bg-cream/95 backdrop-blur-sm py-4 -mx-4 px-4 md:mx-0 md:px-0 transition-all">
-                <div className="flex overflow-x-auto gap-3 pb-2 scrollbar-hide justify-start md:justify-center">
+                <div className="flex flex-wrap gap-3 justify-center">
                     {categories.map(cat => (
                         <button
                             key={cat.id}
@@ -169,7 +169,7 @@ export default function PublicMenu() {
                             className={`
                                 relative px-6 py-2.5 rounded-full whitespace-nowrap transition-all duration-300 font-bold text-sm tracking-wide
                                 ${activeCategory === cat.id
-                                    ? 'bg-charcoal text-white shadow-xl shadow-charcoal/20 transform scale-105'
+                                    ? 'bg-charcoal text-white transform scale-105'
                                     : 'bg-white text-slate-500 hover:bg-pastel-pink/20 hover:text-charcoal hover:scale-105 border border-slate-100'}
                             `}
                         >
