@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
-import { Clock, Tag, UserCog } from 'lucide-react';
+import { Clock, Tag } from 'lucide-react';
 import { formatCurrency } from '../lib/format';
 
 export default function PublicMenu() {
@@ -78,16 +78,7 @@ export default function PublicMenu() {
     return (
         <div className="space-y-10 min-h-screen pb-20">
             {/* Header */}
-            <header className="relative text-center space-y-4 pt-8 md:pt-12">
-                <div className="absolute top-0 right-4 md:right-0">
-                    <Link
-                        to="/admin"
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm hover:bg-white text-charcoal rounded-full text-sm font-bold shadow-sm hover:shadow-md transition-all border border-slate-100"
-                    >
-                        <UserCog size={16} />
-                        <span className="hidden sm:inline">Admin</span>
-                    </Link>
-                </div>
+            <header className="text-center space-y-4 pt-8 md:pt-12">
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
