@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, UtensilsCrossed, LogOut, List, QrCode, ExternalLink, Users } from 'lucide-react';
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { LayoutDashboard, UtensilsCrossed, LogOut, List, QrCode, ExternalLink, Users, Menu, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { ConfirmationModal } from '../components/ui/ConfirmationModal';
@@ -8,7 +8,14 @@ import { ConfirmationModal } from '../components/ui/ConfirmationModal';
 export default function AdminLayout() {
     const { session, role, loading } = useAuth();
     const navigate = useNavigate();
+    const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+    const location = useLocation();
+
+    // Close mobile menu when route changes
+    useEffect(() => {
+        setIsMobileOpen(false);
+    }, [location.pathname]);
 
     useEffect(() => {
         // Wait for loading to finish
@@ -39,13 +46,37 @@ export default function AdminLayout() {
     if (!session || role !== 'admin') return null;
 
     return (
-        <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800">
-            <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col">
-                <div className="p-6 border-b border-slate-100">
+        <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans text-slate-800">
+            {/* Mobile Header */}
+            <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-slate-200 sticky top-0 z-30">
+                <h1 className="text-lg font-display font-semibold text-charcoal">Comilones Admin</h1>
+                <button
+                    onClick={() => setIsMobileOpen(!isMobileOpen)}
+                    className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+                >
+                    {isMobileOpen ? <X size={24} /> : <Menu size={24} />}
+                </button>
+            </div>
+
+            {/* Overlay */}
+            {isMobileOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    onClick={() => setIsMobileOpen(false)}
+                />
+            )}
+
+            {/* Sidebar */}
+            <aside className={`
+                fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 ease-in-out
+                ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
+                md:static md:translate-x-0 md:h-screen md:sticky md:top-0
+            `}>
+                <div className="p-6 border-b border-slate-100 hidden md:block">
                     <h1 className="text-xl font-display font-semibold text-charcoal">Comilones Admin</h1>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-2">
+                <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                     <Link to="/admin" className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-pastel-blue/20 hover:text-charcoal rounded-xl transition-colors">
                         <LayoutDashboard size={20} />
                         <span>Dashboard</span>
@@ -88,7 +119,7 @@ export default function AdminLayout() {
                 </div>
             </aside>
 
-            <main className="flex-1 p-8 overflow-y-auto">
+            <main className="flex-1 p-4 md:p-8 overflow-y-auto w-full">
                 <div className="max-w-5xl mx-auto">
                     <Outlet />
                 </div>
