@@ -3,8 +3,12 @@ import { createClient } from '@supabase/supabase-js';
 
 export const api = {
     categories: {
-        list: async () => {
-            const { data, error } = await supabase.from('categories').select('*');
+        list: async (includeArchived = false) => {
+            let query = supabase.from('categories').select('*').order('name');
+            if (!includeArchived) {
+                query = query.eq('is_active', true);
+            }
+            const { data, error } = await query;
             if (error) throw error;
             return data;
         },
@@ -25,8 +29,12 @@ export const api = {
         }
     },
     dishes: {
-        list: async () => {
-            const { data, error } = await supabase.from('dishes').select('*');
+        list: async (includeArchived = false) => {
+            let query = supabase.from('dishes').select('*').order('name');
+            if (!includeArchived) {
+                query = query.eq('is_active', true);
+            }
+            const { data, error } = await query;
             if (error) throw error;
             return data;
         },
@@ -44,6 +52,23 @@ export const api = {
             const { error } = await supabase.from('dishes').delete().eq('id', id);
             if (error) throw error;
             return;
+        }
+    },
+    settings: {
+        get: async (key: string) => {
+            const { data, error } = await supabase.from('settings').select('value').eq('key', key).single();
+            if (error && error.code !== 'PGRST116') throw error; // Ignore not found error
+            return data?.value || null;
+        },
+        set: async (key: string, value: any) => {
+            const { data, error } = await supabase.from('settings').upsert({ key, value }).select().single();
+            if (error) throw error;
+            return data;
+        },
+        getAll: async () => {
+            const { data, error } = await supabase.from('settings').select('*');
+            if (error) throw error;
+            return data;
         }
     },
     storage: {

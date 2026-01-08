@@ -26,7 +26,7 @@ export default function Categories() {
     }, []);
 
     const loadCategories = async () => {
-        const data = await api.categories.list();
+        const data = await api.categories.list(true); // Load ALL categories inc disabled
         setCategories(data);
     };
 
@@ -75,7 +75,8 @@ export default function Categories() {
             if (editingCategory) {
                 await api.categories.update(editingCategory.id, {
                     name: newCatName,
-                    slug: newCatName.toLowerCase().replace(/ /g, '-')
+                    slug: newCatName.toLowerCase().replace(/ /g, '-'),
+                    is_active: editingCategory.is_active // Persist active status
                 });
                 addToast('Categoría actualizada correctamente.', 'success');
             } else {
@@ -140,24 +141,31 @@ export default function Categories() {
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, height: 0 }}
                                     transition={{ delay: index * 0.05 }}
-                                    className="p-4 flex justify-between items-center hover:bg-slate-50 transition-colors"
+                                    className={`p-4 flex justify-between items-center transition-colors ${!cat.is_active ? 'bg-slate-50 opacity-75' : 'hover:bg-slate-50'}`}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-pastel-blue/20 flex items-center justify-center text-slate-600 font-bold">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${!cat.is_active ? 'bg-slate-200 text-slate-500' : 'bg-pastel-blue/20 text-slate-600'}`}>
                                             {cat.name.charAt(0).toUpperCase()}
                                         </div>
-                                        <span className="font-medium text-slate-700">{cat.name}</span>
+                                        <div>
+                                            <span className={`font-medium block ${!cat.is_active ? 'text-slate-500 line-through' : 'text-slate-700'}`}>
+                                                {cat.name}
+                                            </span>
+                                            {!cat.is_active && <span className="text-xs text-red-500 font-bold">DESHABILITADA</span>}
+                                        </div>
                                     </div>
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => handleOpenModal(cat)}
                                             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                            title="Editar"
                                         >
                                             <Edit2 size={18} />
                                         </button>
                                         <button
                                             onClick={() => confirmDelete(cat.id)}
                                             className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                            title="Eliminar"
                                         >
                                             <Trash2 size={18} />
                                         </button>
@@ -174,7 +182,7 @@ export default function Categories() {
                 onClose={() => setIsModalOpen(false)}
                 title={editingCategory ? "Editar Categoría" : "Nueva Categoría"}
             >
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-6">
                     <Input
                         label="Nombre"
                         value={newCatName}
@@ -182,7 +190,27 @@ export default function Categories() {
                         required
                         placeholder="Ej. Postres"
                     />
-                    <div className="pt-4 flex justify-end gap-3">
+
+                    {editingCategory && (
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <label className="flex items-center justify-between cursor-pointer">
+                                <div>
+                                    <span className="block font-bold text-charcoal">Habilitar Categoría</span>
+                                    <span className="text-xs text-slate-500">
+                                        Si se deshabilita, se ocultarán todos los platos de esta categoría.
+                                    </span>
+                                </div>
+                                <div
+                                    className={`w-12 h-6 rounded-full p-1 transition-colors ${editingCategory.is_active ? 'bg-green-500' : 'bg-slate-300'}`}
+                                    onClick={() => setEditingCategory({ ...editingCategory, is_active: !editingCategory.is_active })}
+                                >
+                                    <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${editingCategory.is_active ? 'translate-x-6' : 'translate-x-0'}`} />
+                                </div>
+                            </label>
+                        </div>
+                    )}
+
+                    <div className="flex justify-end gap-3">
                         <Button variant="primary" type="submit">
                             {editingCategory ? "Guardar Cambios" : "Crear"}
                         </Button>

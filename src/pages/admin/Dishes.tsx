@@ -30,8 +30,8 @@ export default function Dishes() {
 
     const loadData = async () => {
         const [dishesData, catsData] = await Promise.all([
-            api.dishes.list(),
-            api.categories.list()
+            api.dishes.list(true), // Load ALL dishes including archived
+            api.categories.list(true)
         ]);
         setDishes(dishesData);
         setCategories(catsData);
@@ -130,10 +130,10 @@ export default function Dishes() {
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.9 }}
                                 transition={{ delay: index * 0.05 }}
-                                className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4 group hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+                                className={`bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4 group transition-all duration-300 transform hover:-translate-y-1 ${!dish.is_active ? 'opacity-60 grayscale' : ''}`}
                             >
                                 <div className="relative h-48 rounded-xl overflow-hidden bg-slate-100">
-                                    <img src={dish.image_url} alt={dish.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                    <img src={dish.image_url} alt={dish.name} className="w-full h-full object-cover" />
 
                                     <div className="absolute top-2 left-2">
                                         <span className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-bold text-slate-600 shadow-sm border border-white/50">
@@ -141,11 +141,18 @@ export default function Dishes() {
                                         </span>
                                     </div>
 
-                                    <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => handleEdit(dish)} className="p-2 bg-white/90 rounded-full shadow-sm hover:bg-white text-slate-700">
+                                    {!dish.is_active && (
+                                        <div className="absolute inset-0 bg-slate-200/50 backdrop-blur-[2px] flex items-center justify-center">
+                                            <span className="bg-slate-800 text-white px-3 py-1 rounded-full text-xs font-bold">ARCIVADO</span>
+                                        </div>
+                                    )}
+
+                                    {/* Actions - Always visible on mobile, hover on desktop */}
+                                    <div className="absolute top-2 right-2 flex gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                        <button onClick={() => handleEdit(dish)} className="p-2 bg-white/90 rounded-full shadow-sm hover:bg-white text-slate-700 hover:text-pastel-blue transition-colors">
                                             <Edit2 size={16} />
                                         </button>
-                                        <button onClick={() => confirmDelete(dish.id)} className="p-2 bg-white/90 rounded-full shadow-sm hover:bg-white text-red-500">
+                                        <button onClick={() => confirmDelete(dish.id)} className="p-2 bg-white/90 rounded-full shadow-sm hover:bg-white text-red-500 hover:text-red-600 transition-colors">
                                             <Trash2 size={16} />
                                         </button>
                                     </div>
@@ -198,7 +205,8 @@ function DishForm({ initialData, categories, onSuccess }: any) {
         description: '',
         price: '',
         category_id: '',
-        image_url: ''
+        image_url: '',
+        is_active: true
     });
     const [uploading, setUploading] = useState(false);
     const { addToast } = useToast();
@@ -293,6 +301,21 @@ function DishForm({ initialData, categories, onSuccess }: any) {
                         <img src={formData.image_url} alt="Preview" className="w-full h-full object-contain" />
                     </div>
                 )}
+            </div>
+
+            <div className="pt-2">
+                <label className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50">
+                    <input
+                        type="checkbox"
+                        className="w-5 h-5 text-pastel-blue rounded focus:ring-pastel-blue"
+                        checked={formData.is_active ?? true} // Default true
+                        onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                    />
+                    <div>
+                        <span className="block font-bold text-charcoal">Plato Activo</span>
+                        <span className="text-xs text-slate-500">Si se desactiva, se archivará y no será visible en el menú público.</span>
+                    </div>
+                </label>
             </div>
 
             <div className="pt-4 flex justify-end gap-3">
