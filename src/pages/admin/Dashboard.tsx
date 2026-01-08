@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { Button } from '../../components/ui/Button';
-import { Plus, UserPlus, QrCode, Tag, Clock, Megaphone, Utensils } from 'lucide-react';
+import { UserPlus, QrCode, Tag, Clock, Megaphone, Utensils } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../components/ui/Toast';
 import { Modal } from '../../components/ui/Modal';
