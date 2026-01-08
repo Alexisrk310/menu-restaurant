@@ -112,7 +112,8 @@ export default function Users() {
                 />
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-slate-50 text-slate-500 font-medium text-sm">
@@ -170,13 +171,60 @@ export default function Users() {
                         </tbody>
                     </table>
                 </div>
-
-                {filteredUsers.length === 0 && (
-                    <div className="p-12 text-center text-slate-400">
-                        <p>No se encontraron usuarios.</p>
-                    </div>
-                )}
             </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+                <AnimatePresence>
+                    {filteredUsers.map((user, index) => (
+                        <motion.div
+                            key={user.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                            className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100"
+                        >
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 shrink-0">
+                                        <UsersIcon size={20} />
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-charcoal">{user.first_name} {user.last_name}</p>
+                                        <p className="text-sm text-slate-500 break-all">{user.email}</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => handleEdit(user)}
+                                    className="p-2 text-slate-400 hover:text-pastel-blue hover:bg-pastel-blue/10 rounded-lg transition-colors"
+                                >
+                                    <Edit2 size={18} />
+                                </button>
+                            </div>
+
+                            <div className="flex items-center justify-between border-t border-slate-50 pt-3">
+                                <span className="text-xs font-medium text-slate-400">Rol Actual</span>
+                                <span className={`
+                                    inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold
+                                    ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' :
+                                        user.role === 'waiter' ? 'bg-blue-100 text-blue-700' :
+                                            'bg-slate-100 text-slate-600'}
+                                `}>
+                                    <Shield size={12} />
+                                    {user.role === 'admin' ? 'Administrador' :
+                                        user.role === 'waiter' ? 'Mesero' : 'Usuario'}
+                                </span>
+                            </div>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+            </div>
+
+            {filteredUsers.length === 0 && (
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center text-slate-400">
+                    <p>No se encontraron usuarios.</p>
+                </div>
+            )}
 
             <Modal
                 isOpen={isModalOpen}
