@@ -260,82 +260,115 @@ function DishForm({ initialData, categories, onSuccess }: any) {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-                label="Nombre del Plato"
-                value={formData.name}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, name: e.target.value })}
-                required
-            />
-            <div className="space-y-1.5">
-                <label className="text-sm font-medium text-slate-700 block">Descripción</label>
-                <textarea
-                    className="w-full rounded-xl border border-slate-200 p-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-pastel-blue/50 focus:border-pastel-blue placeholder:text-slate-400"
-                    rows={3}
-                    value={formData.description}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, description: e.target.value })}
-                />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-4">
                 <Input
-                    label="Precio"
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, price: e.target.value })}
+                    label="Nombre del Plato"
+                    value={formData.name}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, name: e.target.value })}
                     required
+                    placeholder="Ej: Hamburguesa Clásica"
                 />
-                <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-slate-700 block">Categoría</label>
-                    <select
-                        className="w-full rounded-xl border border-slate-200 p-2.5 text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-pastel-blue/50 font-sans"
-                        value={formData.category_id}
-                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, category_id: e.target.value })}
-                    >
-                        <option value="">Seleccionar...</option>
-                        {categories.map((c: any) => (
-                            <option key={c.id} value={c.id}>{c.name}</option>
-                        ))}
-                    </select>
-                </div>
-            </div>
 
-            <div className="space-y-1.5">
-                <label className="text-sm font-medium text-slate-700 block">Imagen</label>
-                <div className="flex gap-2 items-center">
-                    <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        disabled={uploading}
-                        className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pastel-pink/20 file:text-charcoal hover:file:bg-pastel-pink/30"
+                <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-slate-700 block">Descripción</label>
+                    <textarea
+                        className="w-full rounded-xl border border-slate-200 p-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-pastel-blue/50 focus:border-pastel-blue placeholder:text-slate-400 min-h-[100px] resize-none"
+                        rows={3}
+                        value={formData.description}
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, description: e.target.value })}
+                        placeholder="Describe los ingredientes y detalles del plato..."
                     />
                 </div>
-                {uploading && <p className="text-sm text-slate-400 animate-pulse">Subiendo imagen...</p>}
-                {formData.image_url && (
-                    <div className="mt-2 w-full h-32 rounded-lg overflow-hidden bg-slate-50 border border-slate-100">
-                        <img src={formData.image_url} alt="Preview" className="w-full h-full object-contain" />
-                    </div>
-                )}
-            </div>
 
-            <div className="pt-2">
-                <label className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50">
+                <div className="grid grid-cols-2 gap-4">
+                    <Input
+                        label="Precio"
+                        type="number"
+                        step="50"
+                        value={formData.price}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, price: e.target.value })}
+                        required
+                        placeholder="0"
+                    />
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-slate-700 block">Categoría</label>
+                        <div className="relative">
+                            <select
+                                className="w-full rounded-xl border border-slate-200 p-2.5 text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-pastel-blue/50 font-sans appearance-none"
+                                value={formData.category_id}
+                                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, category_id: e.target.value })}
+                                required
+                            >
+                                <option value="">Seleccionar...</option>
+                                {categories.map((c: any) => (
+                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                ))}
+                            </select>
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700 block">Imagen del Plato</label>
+                    <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 transition-colors hover:border-pastel-blue/50 bg-slate-50/50">
+                        <div className="flex flex-col items-center justify-center gap-3">
+                            {formData.image_url ? (
+                                <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-white shadow-sm border border-slate-100 group">
+                                    <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover" />
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, image_url: '' })}
+                                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="text-center py-4">
+                                    <div className="w-12 h-12 bg-pastel-blue/10 text-pastel-blue rounded-full flex items-center justify-center mx-auto mb-2">
+                                        <Search size={20} className="opacity-50" />
+                                        {/* Using Search as generic icon here, ideally Upload but not imported.
+                                            Actually, let's use the file input directly. */}
+                                    </div>
+                                    <p className="text-sm text-slate-500 mb-2">Haz clic o arrastra para subir</p>
+                                </div>
+                            )}
+
+                            <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                disabled={uploading}
+                                className={formData.image_url ? "hidden" : "w-full"}
+                            />
+                        </div>
+                    </div>
+                    {uploading && <p className="text-sm text-pastel-blue text-center animate-pulse font-medium">Subiendo imagen...</p>}
+                </div>
+
+                <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
                     <input
                         type="checkbox"
-                        className="w-5 h-5 text-pastel-blue rounded focus:ring-pastel-blue"
-                        checked={formData.is_active ?? true} // Default true
+                        className="w-5 h-5 mt-0.5 text-pastel-blue rounded focus:ring-pastel-blue border-slate-300"
+                        checked={formData.is_active ?? true}
                         onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                     />
                     <div>
-                        <span className="block font-bold text-charcoal">Plato Activo</span>
-                        <span className="text-xs text-slate-500">Si se desactiva, se archivará y no será visible en el menú público.</span>
+                        <span className="block font-bold text-charcoal text-sm">Disponible en el menú</span>
+                        <span className="text-xs text-slate-500 block mt-0.5">Si se desactiva, el plato se ocultará del menú público pero permanecerá en el sistema.</span>
                     </div>
                 </label>
             </div>
 
-            <div className="pt-4 flex justify-end gap-3">
-                <Button variant="primary" type="submit" disabled={uploading}>
+            <div className="pt-2 flex flex-col-reverse sm:flex-row justify-end gap-3 sticky bottom-0 bg-white pb-2 sm:pb-0">
+                {/* Sticky bottom for mobile if content overflows significantly,
+                     though the modal body scroll handles it. 
+                     Keeping it simple logic-wise. */}
+                <Button variant="primary" type="submit" disabled={uploading} className="w-full sm:w-auto">
                     {initialData ? 'Guardar Cambios' : 'Crear Plato'}
                 </Button>
             </div>
