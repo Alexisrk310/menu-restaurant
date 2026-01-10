@@ -15,10 +15,11 @@ security definer
 as $$
 begin
   -- Check if the requesting user is an admin
+  -- We use an alias 'admin_check' to avoid ambiguity with the output 'id'
   if not exists (
-    select 1 from public.profiles
-    where id = auth.uid()
-    and role = 'admin'
+    select 1 from public.profiles as admin_check
+    where admin_check.id = auth.uid()
+    and admin_check.role = 'admin'
   ) then
     raise exception 'Unauthorized';
   end if;
@@ -33,6 +34,6 @@ begin
     au.email_confirmed_at
   from public.profiles p
   join auth.users au on p.id = au.id
-  order by p.created_at desc;
+  order by au.created_at desc; -- Fixed: Using auth.users.created_at instead of profiles.created_at
 end;
 $$ language plpgsql;

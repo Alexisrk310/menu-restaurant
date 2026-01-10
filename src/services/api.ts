@@ -104,6 +104,11 @@ export const api = {
             const { data, error } = await supabase.rpc('get_users_with_status');
 
             if (error) {
+                // Ignore AbortError which happens on rapid navigation/reloads
+                if (error.message?.includes('AbortError') || (error as any).name === 'AbortError') {
+                    return [];
+                }
+
                 console.error("Error fetching users with status, falling back to profiles", error);
                 // Fallback for when RPC is not yet created
                 const { data: profiles, error: profileError } = await supabase.from('profiles').select('*');
