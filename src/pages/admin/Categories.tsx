@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Plus, Trash2, List, Search, Edit2 } from 'lucide-react';
+import { Plus, Trash2, List, Search, Edit2, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
 import { Button } from '../../components/ui/Button';
@@ -19,6 +19,7 @@ export default function Categories() {
     const [searchTerm, setSearchTerm] = useState('');
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
     const [editingCategory, setEditingCategory] = useState<any>(null);
+    const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'archived'>('all');
     const { addToast } = useToast();
     const location = useLocation();
     // const { role } = useAuth();
@@ -122,9 +123,15 @@ export default function Categories() {
         }
     };
 
-    const filteredCategories = categories.filter(cat =>
-        cat.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-    );
+    const filteredCategories = categories.filter(cat => {
+        const matchesSearch = cat.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+        const matchesFilter =
+            filterStatus === 'all' ? true :
+                filterStatus === 'active' ? cat.is_active :
+                    !cat.is_active;
+
+        return matchesSearch && matchesFilter;
+    });
 
     return (
         <div className="space-y-6">
@@ -139,16 +146,30 @@ export default function Categories() {
                 </Button>
             </div>
 
-            {/* Search Bar */}
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative">
-                <Search className="absolute left-7 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                <input
-                    type="text"
-                    placeholder="Buscar categoría..."
-                    className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-pastel-blue/50 text-slate-700"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
+            {/* Search and Filter Bar */}
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                    <input
+                        type="text"
+                        placeholder="Buscar categoría..."
+                        className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-pastel-blue/50 text-slate-700"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                <div className="flex items-center gap-2 min-w-[200px]">
+                    <Filter size={20} className="text-slate-400" />
+                    <select
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value as any)}
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-pastel-blue/50 text-slate-700 bg-white"
+                    >
+                        <option value="all">Todos</option>
+                        <option value="active">Activos</option>
+                        <option value="archived">Archivados</option>
+                    </select>
+                </div>
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
