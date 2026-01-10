@@ -16,7 +16,7 @@ export default function Users() {
 
     // Edit / Create State
     const [editingUser, setEditingUser] = useState<any>(null); // If null, we are creating
-    const [selectedRole, setSelectedRole] = useState('user');
+    const [selectedRole, setSelectedRole] = useState('waiter');
 
     // Create Form State
     const [formData, setFormData] = useState({
@@ -53,7 +53,7 @@ export default function Users() {
     const handleAddNew = () => {
         setEditingUser(null);
         setFormData({ email: '', password: '', first_name: '', last_name: '' });
-        setSelectedRole('user');
+        setSelectedRole('waiter');
         setIsModalOpen(true);
     };
 
@@ -312,21 +312,6 @@ export default function Users() {
                                 <div>
                                     <span className="font-bold text-charcoal block">Mesero</span>
                                     <span className="text-xs text-slate-500">Gestión de pedidos y mesas</span>
-                                </div>
-                            </label>
-
-                            <label className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 cursor-pointer hover:border-pastel-blue hover:bg-pastel-blue/5 transition-all">
-                                <input
-                                    type="radio"
-                                    name="role"
-                                    value="user"
-                                    checked={selectedRole === 'user'}
-                                    onChange={(e) => setSelectedRole(e.target.value)}
-                                    className="text-pastel-blue focus:ring-pastel-blue"
-                                />
-                                <div>
-                                    <span className="font-bold text-charcoal block">Usuario</span>
-                                    <span className="text-xs text-slate-500">Sin acceso al panel administrativo</span>
                                 </div>
                             </label>
                         </div>

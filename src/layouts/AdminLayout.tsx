@@ -27,9 +27,9 @@ export default function AdminLayout() {
             return;
         }
 
-        // If session exists but NOT admin, alert and logout/redirect
-        if (role !== 'admin') {
-            alert("Acceso Denegado: Se requieren permisos de Administrador.");
+        // If session exists but NOT admin or waiter, alert and logout/redirect
+        if (role !== 'admin' && role !== 'waiter') {
+            alert("Acceso Denegado: Se requieren permisos de Administrador o Mesero.");
             supabase.auth.signOut();
             navigate('/admin/login');
         }
@@ -43,7 +43,9 @@ export default function AdminLayout() {
     if (loading) return <div className="h-screen flex items-center justify-center text-slate-400">Verificando permisos...</div>;
 
     // Render layout only if authorized
-    if (!session || role !== 'admin') return null;
+    if (!session || (role !== 'admin' && role !== 'waiter')) return null;
+
+    const isAdmin = role === 'admin';
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans text-slate-800">
@@ -77,10 +79,12 @@ export default function AdminLayout() {
                 </div>
 
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-                    <Link to="/admin" className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-pastel-blue/20 hover:text-charcoal rounded-xl transition-colors">
-                        <LayoutDashboard size={20} />
-                        <span>Dashboard</span>
-                    </Link>
+                    {isAdmin && (
+                        <Link to="/admin" className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-pastel-blue/20 hover:text-charcoal rounded-xl transition-colors">
+                            <LayoutDashboard size={20} />
+                            <span>Dashboard</span>
+                        </Link>
+                    )}
                     <Link to="/admin/dishes" className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-pastel-blue/20 hover:text-charcoal rounded-xl transition-colors">
                         <UtensilsCrossed size={20} />
                         <span>Platos</span>
@@ -89,10 +93,12 @@ export default function AdminLayout() {
                         <List size={20} />
                         <span>Categorías</span>
                     </Link>
-                    <Link to="/admin/users" className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-pastel-blue/20 hover:text-charcoal rounded-xl transition-colors">
-                        <Users size={20} />
-                        <span>Usuarios</span>
-                    </Link>
+                    {isAdmin && (
+                        <Link to="/admin/users" className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-pastel-blue/20 hover:text-charcoal rounded-xl transition-colors">
+                            <Users size={20} />
+                            <span>Usuarios</span>
+                        </Link>
+                    )}
                     <Link to="/admin/qr" className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-pastel-blue/20 hover:text-charcoal rounded-xl transition-colors">
                         <QrCode size={20} />
                         <span>Códigos QR</span>
@@ -112,6 +118,9 @@ export default function AdminLayout() {
                             {session.user.email}
                         </div>
                     )}
+                    <div className="px-4 mb-2 text-xs text-slate-400 uppercase font-bold tracking-wider">
+                        {isAdmin ? 'Administrador' : 'Mesero'}
+                    </div>
                     <button onClick={() => setIsLogoutModalOpen(true)} className="flex w-full items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-50 hover:text-red-500 rounded-xl transition-colors">
                         <LogOut size={20} />
                         <span>Cerrar Sesión</span>

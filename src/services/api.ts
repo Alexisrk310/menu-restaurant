@@ -126,19 +126,19 @@ export const api = {
             if (!authData.user) throw new Error("No se pudo crear el usuario");
 
             // 2. Update Profile with extra data (First Name, Last Name, Role)
-            // We use the MAIN client (admin) to update the profile because the new user might not have permissions yet
-            // or we simply want to ensure it's done with admin privileges.
+            // We use upsert to handle both cases: 
+            // - Trigger already created the profile (Update)
+            // - Trigger hasn't run yet or failed (Insert)
             const { error: profileError } = await supabase
                 .from('profiles')
-                .update({
+                .upsert({
+                    id: authData.user.id,
                     first_name: userData.first_name,
                     last_name: userData.last_name,
-                    role: userData.role
-                })
-                .eq('id', authData.user.id);
+                    role: userData.role,
+                    updated_at: new Date().toISOString()
+                });
 
-            // If profile update fails, we might technically have an orphan auth user, 
-            // but for this MVP we just throw.
             if (profileError) {
                 console.error("Error updating profile:", profileError);
                 throw profileError;
