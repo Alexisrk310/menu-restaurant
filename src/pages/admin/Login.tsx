@@ -8,7 +8,7 @@ import { useAuth } from '../../hooks/useAuth';
 
 export default function Login() {
     const navigate = useNavigate();
-    const { session, loading: authLoading } = useAuth();
+    const { session, role, loading: authLoading } = useAuth();
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -16,9 +16,16 @@ export default function Login() {
 
     useEffect(() => {
         if (!authLoading && session) {
-            navigate('/admin', { replace: true });
+            // Redirect based on role
+            if (session.user) {
+                // We need to wait for role to be available (useAuth provides it)
+                // If role isn't ready yet (null), we wait. 
+                // But !authLoading implies role is loaded (per useAuth internal logic)
+                const target = role === 'waiter' ? '/admin/dishes' : '/admin';
+                navigate(target, { replace: true });
+            }
         }
-    }, [session, authLoading, navigate]);
+    }, [session, role, authLoading, navigate]);
 
     if (authLoading) return null;
 
@@ -28,14 +35,17 @@ export default function Login() {
         setError('');
 
         try {
-            const { error: signInError } = await supabase.auth.signInWithPassword({
+            const { data, error: signInError } = await supabase.auth.signInWithPassword({
                 email,
                 password,
             });
 
             if (signInError) throw signInError;
 
-            navigate('/admin');
+            // Wait a moment for auth state to propagate or manually check role?
+            // The useEffect will handle the redirect once session updates.
+            // But we can be proactive if we want specific UX.
+            // For now, let useEffect handle it naturally.
         } catch (err: any) {
             console.error(err);
             setError('Credenciales inválidas');

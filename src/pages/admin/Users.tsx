@@ -154,6 +154,9 @@ export default function Users() {
         u.last_name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()))
     );
 
+    // Check if email confirmation is required (defaults to true)
+    const requireEmailConfirmation = import.meta.env.VITE_REQUIRE_EMAIL_CONFIRMATION !== 'false';
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -208,14 +211,16 @@ export default function Users() {
                                                 <div>
                                                     <div className="flex items-center gap-2">
                                                         <p className="font-bold text-charcoal">{user.first_name} {user.last_name}</p>
-                                                        {user.email_confirmed_at ? (
-                                                            <div title="Correo verificado">
-                                                                <CheckCircle size={14} className="text-green-500" />
-                                                            </div>
-                                                        ) : (
-                                                            <div title="Correo no verificado">
-                                                                <XCircle size={14} className="text-amber-500" />
-                                                            </div>
+                                                        {requireEmailConfirmation && (
+                                                            user.email_confirmed_at ? (
+                                                                <div title="Correo verificado">
+                                                                    <CheckCircle size={14} className="text-green-500" />
+                                                                </div>
+                                                            ) : (
+                                                                <div title="Correo no verificado">
+                                                                    <XCircle size={14} className="text-amber-500" />
+                                                                </div>
+                                                            )
                                                         )}
                                                     </div>
                                                     <p className="text-sm text-slate-500">{user.email}</p>
@@ -327,7 +332,7 @@ export default function Users() {
                 title={editingUser ? "Editar Usuario" : "Crear Nuevo Usuario"}
             >
                 <form onSubmit={handleSave} className="space-y-6">
-                    {!editingUser && (
+                    {!editingUser && requireEmailConfirmation && (
                         <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start gap-3">
                             <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={20} />
                             <div>
