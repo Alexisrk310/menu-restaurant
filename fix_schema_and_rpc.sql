@@ -26,15 +26,24 @@ end $$;
 alter table public.profiles enable row level security;
 
 -- Policy: Admins can do everything on profiles
+-- Helper function to check admin status without triggering RLS recursion
+create or replace function public.is_admin()
+returns boolean
+security definer
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid()
+    and role = 'admin'
+  );
+$$ language sql;
+
+-- Policy: Admins can do everything on profiles
 drop policy if exists "Admins can manage all profiles" on public.profiles;
 create policy "Admins can manage all profiles"
 on public.profiles
 for all
-using (
-  auth.uid() in (
-    select id from public.profiles where role = 'admin'
-  )
-);
+using ( public.is_admin() );
 
 -- Policy: Users can read their own profile (usually exists, but ensuring it)
 drop policy if exists "Users can read own profile" on public.profiles;
