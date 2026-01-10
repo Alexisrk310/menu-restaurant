@@ -94,3 +94,34 @@ begin
   delete from auth.users where id = user_uuid;
 end;
 $$ language plpgsql;
+
+-- 5. Helper function to get users with email verification status
+-- Standard list() only returns profiles, which doesn't have email_confirmed_at.
+create or replace function get_users_with_status()
+returns table (
+  id uuid,
+  email varchar,
+  first_name text,
+  last_name text,
+  role text,
+  email_confirmed_at timestamptz
+) 
+security definer
+as $$
+begin
+  if not public.is_admin() then
+    raise exception 'Unauthorized';
+  end if;
+
+  return query
+  select 
+    au.id, 
+    au.email::varchar, 
+    p.first_name, 
+    p.last_name, 
+    p.role,
+    au.email_confirmed_at
+  from auth.users au
+  join public.profiles p on p.id = au.id;
+end;
+$$ language plpgsql;

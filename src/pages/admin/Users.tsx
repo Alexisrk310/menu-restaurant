@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Users as UsersIcon, Shield, Search, Edit2, Plus, Trash2 } from 'lucide-react';
+import { Users as UsersIcon, Shield, Search, Edit2, Plus, Trash2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
 import { Button } from '../../components/ui/Button';
@@ -188,7 +188,18 @@ export default function Users() {
                                                     <UsersIcon size={20} />
                                                 </div>
                                                 <div>
-                                                    <p className="font-bold text-charcoal">{user.first_name} {user.last_name}</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="font-bold text-charcoal">{user.first_name} {user.last_name}</p>
+                                                        {user.email_confirmed_at ? (
+                                                            <div title="Correo verificado">
+                                                                <CheckCircle size={14} className="text-green-500" />
+                                                            </div>
+                                                        ) : (
+                                                            <div title="Correo no verificado">
+                                                                <XCircle size={14} className="text-amber-500" />
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                     <p className="text-sm text-slate-500">{user.email}</p>
                                                 </div>
                                             </div>
@@ -298,6 +309,18 @@ export default function Users() {
                 title={editingUser ? "Editar Usuario" : "Crear Nuevo Usuario"}
             >
                 <form onSubmit={handleSave} className="space-y-6">
+                    {!editingUser && (
+                        <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start gap-3">
+                            <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={20} />
+                            <div>
+                                <h4 className="font-bold text-amber-800 text-sm">Verificación Requerida</h4>
+                                <p className="text-amber-700 text-xs">
+                                    El nuevo usuario recibirá un correo electrónico de confirmación.
+                                    No podrá iniciar sesión hasta que verifique su cuenta.
+                                </p>
+                            </div>
+                        </div>
+                    )}
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <Input

@@ -95,8 +95,16 @@ export const api = {
     },
     users: {
         list: async () => {
-            const { data, error } = await supabase.from('profiles').select('*');
-            if (error) throw error;
+            // We use RPC to get extra fields like 'email_confirmed_at' that aren't in public.profiles
+            const { data, error } = await supabase.rpc('get_users_with_status');
+
+            if (error) {
+                console.error("Error fetching users with status, falling back to profiles", error);
+                // Fallback for when RPC is not yet created
+                const { data: profiles, error: profileError } = await supabase.from('profiles').select('*');
+                if (profileError) throw profileError;
+                return profiles;
+            }
             return data;
         },
         updateRole: async (id: string, role: string) => {
