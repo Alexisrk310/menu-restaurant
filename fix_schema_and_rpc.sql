@@ -22,6 +22,31 @@ begin
     end if;
 end $$;
 
+-- 3. Fix Row Level Security (RLS) to allow admins to insert/update profiles
+alter table public.profiles enable row level security;
+
+-- Policy: Admins can do everything on profiles
+create policy "Admins can manage all profiles"
+on public.profiles
+for all
+using (
+  auth.uid() in (
+    select id from public.profiles where role = 'admin'
+  )
+);
+
+-- Policy: Users can read their own profile (usually exists, but ensuring it)
+create policy "Users can read own profile"
+on public.profiles
+for select
+using ( auth.uid() = id );
+
+-- Policy: Users can update their own profile
+create policy "Users can update own profile"
+on public.profiles
+for update
+using ( auth.uid() = id );
+
 -- 2. Update the Deletion Function to handle dependencies
 -- We explicitly delete the profile first to avoid Foreign Key violations if CASCADE is not configured.
 create or replace function delete_user_by_id(user_uuid uuid)
