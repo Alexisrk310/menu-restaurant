@@ -22,6 +22,11 @@ begin
     end if;
 end $$;
 
+-- 1.1 Fix Check Constraint (profiles_role_check)
+-- The error means the database expects specific values that don't match 'admin'/'waiter'
+alter table public.profiles drop constraint if exists profiles_role_check;
+alter table public.profiles add constraint profiles_role_check check (role in ('admin', 'waiter', 'user'));
+
 -- 3. Fix Row Level Security (RLS) to allow admins to insert/update profiles
 alter table public.profiles enable row level security;
 
