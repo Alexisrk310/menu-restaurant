@@ -10,12 +10,14 @@ import { Input } from '../../components/ui/Input';
 import { useToast } from '../../components/ui/Toast';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { useRefreshOnFocus } from '../../hooks/useRefreshOnFocus';
+import { useDebounce } from '../../hooks/useDebounce';
 
 export default function Categories() {
     const [categories, setCategories] = useState<any[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newCatName, setNewCatName] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
     const [editingCategory, setEditingCategory] = useState<any>(null);
     const { addToast } = useToast();
     const location = useLocation();
@@ -95,7 +97,14 @@ export default function Categories() {
                     slug: newCatName.toLowerCase().replace(/ /g, '-'),
                     is_active: editingCategory.is_active // Persist active status
                 });
-                addToast('Categoría actualizada correctamente.', 'success');
+
+                // If archiving category, also archive all its dishes
+                if (editingCategory.is_active === false) {
+                    await api.dishes.updateByCategory(editingCategory.id, { is_active: false });
+                    addToast('Categoría y sus platos actualizados.', 'success');
+                } else {
+                    addToast('Categoría actualizada correctamente.', 'success');
+                }
             } else {
                 await api.categories.create({
                     name: newCatName,
@@ -114,7 +123,7 @@ export default function Categories() {
     };
 
     const filteredCategories = categories.filter(cat =>
-        cat.name.toLowerCase().includes(searchTerm.toLowerCase())
+        cat.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
     );
 
     return (

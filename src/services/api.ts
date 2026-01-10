@@ -48,6 +48,11 @@ export const api = {
             if (error) throw error;
             return data;
         },
+        updateByCategory: async (categoryId: string, updates: any) => {
+            const { data, error } = await supabase.from('dishes').update(updates).eq('category_id', categoryId).select();
+            if (error) throw error;
+            return data;
+        },
         delete: async (id: string) => {
             const { error } = await supabase.from('dishes').delete().eq('id', id);
             if (error) throw error;

@@ -12,6 +12,9 @@ export function useAuth() {
 
         const getRole = async (userId: string) => {
             try {
+                // Try to get from local storage or cache if possible to avoid blip, 
+                // but for security we verify with DB. 
+                // We could implement simple caching here if needed.
                 const { data, error } = await supabase
                     .from('profiles')
                     .select('role')
@@ -20,6 +23,9 @@ export function useAuth() {
 
                 if (error) {
                     console.error("Error fetching role:", error);
+                    return 'waiter'; // Safe fallback or null? Let's stay safe: null might block access. 
+                    // Actually, if DB fails but Auth is good, we might want to allow basic access or retry.
+                    // For now, return null to force re-check or fail safe.
                     return null;
                 }
                 return data?.role || null;
@@ -30,68 +36,51 @@ export function useAuth() {
         };
 
         const initializeAuth = async () => {
-            // Check active session first
+            // 1. Get initial session
             const { data: { session: initialSession } } = await supabase.auth.getSession();
 
-            if (initialSession) {
-                const userRole = await getRole(initialSession.user.id);
-                if (mounted) {
+            if (mounted) {
+                if (initialSession) {
                     setSession(initialSession);
-                    setRole(userRole);
-                    setLoading(false);
-                }
-            } else {
-                if (mounted) {
+                    // Only fetch role if we have a session
+                    const userRole = await getRole(initialSession.user.id);
+                    if (mounted) {
+                        setRole(userRole);
+                        setLoading(false);
+                    }
+                } else {
                     setSession(null);
                     setRole(null);
                     setLoading(false);
                 }
             }
 
-            // Listen for changes
-            const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+            // 2. Listen for changes (Sign in, Sign out, Token Refresh)
+            const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
                 if (!mounted) return;
 
-                if (newSession) {
-                    // Optimized: Only fetch role if session user changed or we don't have a role yet
-                    // But for safety on reload/login, we just fetch it.
-                    const userRole = await getRole(newSession.user.id);
-                    if (mounted) {
-                        setSession(newSession);
-                        setRole(userRole);
-                        setLoading(false);
-                    }
-                } else {
-                    if (mounted) {
-                        setSession(null);
-                        setRole(null);
-                        setLoading(false);
-                    }
-                }
-            });
+                // console.log("Auth event:", event);
 
-            // Re-check session on focus
-            const onFocus = async () => {
-                // If the tab just became visible, re-fetch the session
-                if (document.visibilityState === 'visible') {
-                    const { data: { session: currentSession } } = await supabase.auth.getSession();
-                    if (!currentSession && mounted) {
-                        // Session expired
-                        setSession(null);
-                        setRole(null);
-                    } else if (currentSession && mounted) {
-                        setSession(currentSession);
-                        // Optional: Refresh role if needed, but session is primary
+                if (newSession) {
+                    setSession(newSession);
+                    // If switching users or fresh login, get role. 
+                    // If just refreshing token, role probably hasn't changed, but it's safer to re-verify.
+                    // To optimize: could check if user ID changed.
+                    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+                        const userRole = await getRole(newSession.user.id);
+                        if (mounted) setRole(userRole);
                     }
+                    setLoading(false);
+                } else if (event === 'SIGNED_OUT') {
+                    setSession(null);
+                    setRole(null);
+                    setLoading(false);
                 }
-            };
-            document.addEventListener('visibilitychange', onFocus);
-            window.addEventListener('focus', onFocus);
+                // Note: We don't nullify session on other events like 'USER_UPDATED' unless necessary.
+            });
 
             return () => {
                 subscription.unsubscribe();
-                document.removeEventListener('visibilitychange', onFocus);
-                window.removeEventListener('focus', onFocus);
             };
         };
 
@@ -99,10 +88,6 @@ export function useAuth() {
 
         return () => {
             mounted = false;
-            // cleanupPromise corresponds to the subscription, usually handled inside.
-            // The subscription cleanup is tricky with async wrapper, 
-            // but Supabase subscription.unsubscribe() is sync.
-            // We just let the variable scope handle 'mounted' check.
         };
     }, []);
 

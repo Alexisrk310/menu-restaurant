@@ -75,9 +75,19 @@ export default function Login() {
 
                     {error && <div className="text-red-500 text-sm text-center bg-red-50 p-3 rounded-xl">{error}</div>}
 
-                    <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? 'Ingresando...' : 'Ingresar'}
-                    </Button>
+                    <div className="flex flex-col gap-3">
+                        <Button type="submit" className="w-full" disabled={loading}>
+                            {loading ? 'Ingresando...' : 'Ingresar'}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => navigate('/')}
+                            className="w-full"
+                        >
+                            Volver al Menú
+                        </Button>
+                    </div>
                 </form>
             </div>
         </div>

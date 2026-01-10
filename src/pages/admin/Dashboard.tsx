@@ -59,7 +59,11 @@ export default function AdminDashboard() {
             if (settingsData) {
                 const isOpen = settingsData.find((s: any) => s.key === 'restaurant_open')?.value ?? true;
                 const announcement = settingsData.find((s: any) => s.key === 'global_announcement')?.value ?? '';
-                setConfig({ isOpen, announcement });
+
+                // Only update config from server if the modal is NOT open, to avoid overwriting user's work
+                if (!isConfigModalOpen) {
+                    setConfig({ isOpen, announcement });
+                }
             }
 
         } catch (error) {
@@ -131,8 +135,10 @@ export default function AdminDashboard() {
                 <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start gap-3">
                     <Megaphone className="text-amber-500 mt-0.5" size={20} />
                     <div>
-                        <h4 className="font-bold text-amber-800 text-sm">Anuncio Activo</h4>
-                        <p className="text-amber-700 text-sm">{config.announcement}</p>
+                        <h4 className="font-bold text-amber-800 text-sm">Anuncio(s) Activo(s)</h4>
+                        {config.announcement.split('|').map((ann, i) => (
+                            <p key={i} className="text-amber-700 text-sm">• {ann.trim()}</p>
+                        ))}
                     </div>
                 </div>
             )}
@@ -254,7 +260,11 @@ export default function AdminDashboard() {
                             value={config.announcement}
                             onChange={(e: any) => setConfig({ ...config, announcement: e.target.value })}
                         />
-                        <p className="text-xs text-slate-400">Este mensaje aparecerá en la parte superior del menú público.</p>
+                        <p className="text-xs text-slate-400">
+                            Este mensaje aparecerá en la parte superior del menú público.
+                            <br />
+                            <b>Tip:</b> Usa el símbolo <b>|</b> para separar múltiples anuncios. Ej: "2x1 Mojitos | Música en vivo hoy".
+                        </p>
                     </div>
 
                     <div className="flex justify-end pt-4">

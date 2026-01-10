@@ -10,10 +10,12 @@ import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { useToast } from '../../components/ui/Toast';
 import { Input } from '../../components/ui/Input';
 import { useRefreshOnFocus } from '../../hooks/useRefreshOnFocus';
+import { useDebounce } from '../../hooks/useDebounce';
 
 export default function Users() {
     const [users, setUsers] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const location = useLocation();
 
@@ -141,9 +143,9 @@ export default function Users() {
     };
 
     const filteredUsers = users.filter((u: any) =>
-    (u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.last_name?.toLowerCase().includes(searchTerm.toLowerCase()))
+    (u.email?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        u.first_name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        u.last_name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()))
     );
 
     return (

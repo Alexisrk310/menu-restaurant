@@ -10,6 +10,7 @@ import { useToast } from '../../components/ui/Toast';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { formatCurrency } from '../../lib/format';
 import { useRefreshOnFocus } from '../../hooks/useRefreshOnFocus';
+import { useDebounce } from '../../hooks/useDebounce';
 
 export default function Dishes() {
     const [dishes, setDishes] = useState<any[]>([]);
@@ -22,7 +23,9 @@ export default function Dishes() {
 
     // Filters
     const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
     const [filterCategory, setFilterCategory] = useState('');
+    const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'active', 'archived'
 
     // Confirmation State
     const [confirmOpen, setConfirmOpen] = useState(false);
@@ -88,10 +91,21 @@ export default function Dishes() {
     };
 
     const filteredDishes = dishes.filter(dish => {
-        const matchesSearch = dish.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            dish.description.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = dish.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+            dish.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
         const matchesCategory = filterCategory ? dish.category_id === filterCategory : true;
-        return matchesSearch && matchesCategory;
+
+        let matchesStatus = true;
+        if (filterStatus === 'active') matchesStatus = dish.is_active;
+        if (filterStatus === 'archived') matchesStatus = !dish.is_active;
+
+        return matchesSearch && matchesCategory && matchesStatus;
+    }).sort((a, b) => {
+        // Sort by status (active first), then by name
+        if (a.is_active === b.is_active) {
+            return a.name.localeCompare(b.name);
+        }
+        return a.is_active ? -1 : 1;
     });
 
     const getCategoryName = (catId: string) => {
@@ -125,18 +139,32 @@ export default function Dishes() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <div className="relative w-full md:w-64">
-                    <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                    <select
-                        className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-pastel-blue/50 text-slate-700 bg-white appearance-none"
-                        value={filterCategory}
-                        onChange={(e) => setFilterCategory(e.target.value)}
-                    >
-                        <option value="">Todas las categorías</option>
-                        {categories.map(cat => (
-                            <option key={cat.id} value={cat.id}>{cat.name}</option>
-                        ))}
-                    </select>
+                <div className="flex gap-4 w-full md:w-auto">
+                    <div className="relative w-full md:w-48">
+                        <select
+                            className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-pastel-blue/50 text-slate-700 bg-white"
+                            value={filterStatus}
+                            onChange={(e) => setFilterStatus(e.target.value)}
+                        >
+                            <option value="all">Todos los estados</option>
+                            <option value="active">Activos</option>
+                            <option value="archived">Archivados</option>
+                        </select>
+                    </div>
+
+                    <div className="relative w-full md:w-64">
+                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                        <select
+                            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-pastel-blue/50 text-slate-700 bg-white appearance-none"
+                            value={filterCategory}
+                            onChange={(e) => setFilterCategory(e.target.value)}
+                        >
+                            <option value="">Todas las categorías</option>
+                            {categories.map(cat => (
+                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -167,7 +195,7 @@ export default function Dishes() {
 
                                     {!dish.is_active && (
                                         <div className="absolute inset-0 bg-slate-200/50 backdrop-blur-[2px] flex items-center justify-center">
-                                            <span className="bg-slate-800 text-white px-3 py-1 rounded-full text-xs font-bold">ARCIVADO</span>
+                                            <span className="bg-slate-800 text-white px-3 py-1 rounded-full text-xs font-bold">ARCHIVADO</span>
                                         </div>
                                     )}
 

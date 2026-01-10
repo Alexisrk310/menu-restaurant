@@ -14,7 +14,8 @@ export default function PublicMenu() {
 
     // Config State
     const [isRestaurantOpen, setIsRestaurantOpen] = useState(true);
-    const [announcement, setAnnouncement] = useState('');
+    const [announcements, setAnnouncements] = useState<string[]>([]);
+    const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
 
     useEffect(() => {
         loadData();
@@ -33,7 +34,12 @@ export default function PublicMenu() {
                 const isOpen = settingsData.find((s: any) => s.key === 'restaurant_open')?.value ?? true;
                 const ann = settingsData.find((s: any) => s.key === 'global_announcement')?.value ?? '';
                 setIsRestaurantOpen(isOpen);
-                setAnnouncement(ann);
+
+                if (ann) {
+                    setAnnouncements(ann.split('|').map((s: string) => s.trim()).filter((s: string) => s.length > 0));
+                } else {
+                    setAnnouncements([]);
+                }
             }
 
             setCategories([{ id: 'all', name: 'Todos' }, ...catsData]);
@@ -107,9 +113,11 @@ export default function PublicMenu() {
                     <p className="text-slate-500 mb-6">
                         En este momento no estamos tomando pedidos. Por favor, vuelve más tarde o revisa nuestro horario de atención.
                     </p>
-                    {announcement && (
-                        <div className="bg-amber-50 text-amber-800 p-4 rounded-xl text-sm font-medium border border-amber-100">
-                            📢 {announcement}
+                    {announcements.length > 0 && (
+                        <div className="bg-amber-50 text-amber-800 p-4 rounded-xl text-sm font-medium border border-amber-100 flex flex-col gap-1">
+                            {announcements.map((ann, i) => (
+                                <div key={i}>📢 {ann}</div>
+                            ))}
                         </div>
                     )}
                 </motion.div>
@@ -124,18 +132,29 @@ export default function PublicMenu() {
         <div className="space-y-10 min-h-screen pb-20 relative">
             {/* Announcement Banner */}
             {/* Announcement Banner - Minimalist */}
-            <AnimatePresence>
-                {announcement && (
+            {/* Announcement Banner - Carousel */}
+            <AnimatePresence mode="wait">
+                {announcements.length > 0 && (
                     <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
                         className="fixed top-4 left-0 right-0 z-50 flex justify-center pointer-events-none"
                     >
-                        <div className="bg-white/80 backdrop-blur-md border border-slate-200 shadow-sm px-4 py-2 rounded-full flex items-center gap-2 text-sm text-charcoal max-w-sm pointer-events-auto">
-                            <span className="w-2 h-2 rounded-full bg-pastel-orange animate-pulse"></span>
-                            <span className="font-medium">{announcement}</span>
-                        </div>
+                        <motion.div
+                            key={currentAnnouncementIndex}
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 20, position: 'absolute' }}
+                            className="bg-white/90 backdrop-blur-md border border-slate-200 shadow-sm px-4 py-2 rounded-full flex items-center gap-2 text-sm text-charcoal max-w-sm pointer-events-auto"
+                            onAnimationComplete={() => {
+                                if (announcements.length > 1) {
+                                    setTimeout(() => {
+                                        setCurrentAnnouncementIndex((prev) => (prev + 1) % announcements.length);
+                                    }, 4000);
+                                }
+                            }}
+                        >
+                            <span className="w-2 h-2 rounded-full bg-pastel-orange animate-pulse shrink-0"></span>
+                            <span className="font-medium truncate">{announcements[currentAnnouncementIndex]}</span>
+                        </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
