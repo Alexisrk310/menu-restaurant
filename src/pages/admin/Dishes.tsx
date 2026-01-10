@@ -9,6 +9,7 @@ import { Input } from '../../components/ui/Input';
 import { useToast } from '../../components/ui/Toast';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { formatCurrency } from '../../lib/format';
+import { useRefreshOnFocus } from '../../hooks/useRefreshOnFocus';
 
 export default function Dishes() {
     const [dishes, setDishes] = useState<any[]>([]);
@@ -29,6 +30,8 @@ export default function Dishes() {
     useEffect(() => {
         loadData();
     }, []);
+
+
 
     // Handle Quick Actions from Dashboard
     useEffect(() => {
@@ -52,6 +55,8 @@ export default function Dishes() {
         setDishes(dishesData);
         setCategories(catsData);
     };
+
+    useRefreshOnFocus(loadData);
 
     const confirmDelete = (id: string) => {
         setDishToDelete(id);

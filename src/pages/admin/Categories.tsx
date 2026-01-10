@@ -9,6 +9,7 @@ import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
 import { useToast } from '../../components/ui/Toast';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
+import { useRefreshOnFocus } from '../../hooks/useRefreshOnFocus';
 
 export default function Categories() {
     const [categories, setCategories] = useState<any[]>([]);
@@ -27,6 +28,8 @@ export default function Categories() {
         loadCategories();
     }, []);
 
+
+
     // Handle Quick Actions
     useEffect(() => {
         if (location.state && location.state.create) {
@@ -39,6 +42,8 @@ export default function Categories() {
         const data = await api.categories.list(true); // Load ALL categories inc disabled
         setCategories(data);
     };
+
+    useRefreshOnFocus(loadCategories);
 
     const confirmDelete = async (id: string) => {
         setCategoryToDelete(id);

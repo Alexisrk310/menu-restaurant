@@ -70,8 +70,28 @@ export function useAuth() {
                 }
             });
 
+            // Re-check session on focus
+            const onFocus = async () => {
+                // If the tab just became visible, re-fetch the session
+                if (document.visibilityState === 'visible') {
+                    const { data: { session: currentSession } } = await supabase.auth.getSession();
+                    if (!currentSession && mounted) {
+                        // Session expired
+                        setSession(null);
+                        setRole(null);
+                    } else if (currentSession && mounted) {
+                        setSession(currentSession);
+                        // Optional: Refresh role if needed, but session is primary
+                    }
+                }
+            };
+            document.addEventListener('visibilitychange', onFocus);
+            window.addEventListener('focus', onFocus);
+
             return () => {
                 subscription.unsubscribe();
+                document.removeEventListener('visibilitychange', onFocus);
+                window.removeEventListener('focus', onFocus);
             };
         };
 

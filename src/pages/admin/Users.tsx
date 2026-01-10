@@ -8,6 +8,7 @@ import { Modal } from '../../components/ui/Modal';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { useToast } from '../../components/ui/Toast';
 import { Input } from '../../components/ui/Input';
+import { useRefreshOnFocus } from '../../hooks/useRefreshOnFocus';
 
 export default function Users() {
     const [users, setUsers] = useState<any[]>([]);
@@ -37,6 +38,8 @@ export default function Users() {
         loadUsers();
     }, []);
 
+
+
     // Handle Quick Actions
     useEffect(() => {
         if (location.state && location.state.create) {
@@ -54,6 +57,8 @@ export default function Users() {
             addToast('Error al cargar usuarios', 'error');
         }
     };
+
+    useRefreshOnFocus(loadUsers);
 
     const handleAddNew = () => {
         setEditingUser(null);

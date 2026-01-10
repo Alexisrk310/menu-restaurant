@@ -7,6 +7,7 @@ import { useToast } from '../../components/ui/Toast';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
 import { QRCodeSVG } from 'qrcode.react';
+import { useRefreshOnFocus } from '../../hooks/useRefreshOnFocus';
 
 export default function AdminDashboard() {
     const navigate = useNavigate();
@@ -28,9 +29,7 @@ export default function AdminDashboard() {
     // QR State
     const [isQRExpanded, setIsQRExpanded] = useState(false);
 
-    useEffect(() => {
-        loadDashboardData();
-    }, []);
+
 
     const loadDashboardData = async () => {
         try {
@@ -61,6 +60,12 @@ export default function AdminDashboard() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        loadDashboardData();
+    }, []);
+
+    useRefreshOnFocus(loadDashboardData);
 
     const handleSaveConfig = async (e: React.FormEvent) => {
         e.preventDefault();
