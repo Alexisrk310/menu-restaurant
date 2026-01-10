@@ -10,10 +10,14 @@ export function useAuth() {
     useEffect(() => {
         let mounted = true;
 
-        const getRole = async (userId: string, retries = 3, delay = 500) => {
+        const getRole = async (userId: string, retries = 3, delay = 500, forceRefresh = false) => {
             try {
-                // Try to get from local storage or cache if possible to avoid blip, 
-                // but for security we verify with DB. 
+                // Force refresh if requested (e.g. after retries failed)
+                if (forceRefresh) {
+                    const { error: refreshError } = await supabase.auth.refreshSession();
+                    if (refreshError) console.error("Session refresh failed:", refreshError);
+                }
+
                 const { data, error } = await supabase
                     .from('profiles')
                     .select('role')
@@ -22,10 +26,15 @@ export function useAuth() {
 
                 if (error) {
                     console.error("Error fetching role:", error);
-                    // If error and we have retries left, wait and retry
+
                     if (retries > 0) {
                         await new Promise(resolve => setTimeout(resolve, delay));
-                        return getRole(userId, retries - 1, delay * 2);
+                        return getRole(userId, retries - 1, delay * 2, false);
+                    } else if (!forceRefresh) {
+                        // If retries exhausted, try ONE final attempt with a forced session refresh
+                        // This handles cases where token is stale/invalid for RLS immediately after signup
+                        console.log("Retries exhausted, forcing session refresh...");
+                        return getRole(userId, 0, 0, true);
                     }
                     return null;
                 }
@@ -34,7 +43,7 @@ export function useAuth() {
                 console.error("Exception fetching role:", err);
                 if (retries > 0) {
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    return getRole(userId, retries - 1, delay * 2);
+                    return getRole(userId, retries - 1, delay * 2, false);
                 }
                 return null;
             }
