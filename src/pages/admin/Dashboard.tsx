@@ -3,7 +3,6 @@ import { api } from '../../services/api';
 import { Button } from '../../components/ui/Button';
 import { UserPlus, QrCode, Tag, Clock, Megaphone, Utensils } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth'; // Import useAuth
 import { useToast } from '../../components/ui/Toast';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
@@ -19,14 +18,14 @@ export default function AdminDashboard() {
     });
     const [latestDishes, setLatestDishes] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const { role } = useAuth(); // Check role
+    // const { role } = useAuth(); // Check role
 
-    // Redirect Waiters (They shouldn't see this stats dashboard)
-    useEffect(() => {
-        if (role === 'waiter') {
-            navigate('/admin/dishes'); // Redirect to their "home"
-        }
-    }, [role, navigate]);
+    // Redirect Waiters (Handled by ProtectedRoute)
+    // useEffect(() => {
+    //     if (role === 'waiter') {
+    //         navigate('/admin/dishes'); 
+    //     }
+    // }, [role, navigate]);
 
     // Settings State
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);

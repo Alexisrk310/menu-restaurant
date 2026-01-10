@@ -3,7 +3,6 @@ import { useLocation } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Search, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
-import { useAuth } from '../../hooks/useAuth'; // Import useAuth
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
@@ -18,8 +17,8 @@ export default function Dishes() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingDish, setEditingDish] = useState<any>(null);
     const { addToast } = useToast();
-    const { role } = useAuth(); // Get role
-    const isAdmin = role === 'admin';
+    // const { role } = useAuth(); // Role handled by route protection
+    // const isAdmin = role === 'admin';
 
     // Filters
     const [searchTerm, setSearchTerm] = useState('');
@@ -107,12 +106,11 @@ export default function Dishes() {
                     <h2 className="text-2xl font-display font-bold text-charcoal">Platos</h2>
                     <p className="text-slate-500">Administra el menú de tu restaurante</p>
                 </div>
-                {isAdmin && (
-                    <Button onClick={handleAddNew} className="flex items-center gap-2">
-                        <Plus size={20} />
-                        Nuevo Plato
-                    </Button>
-                )}
+                {/* Actions available to all authorized users (Admin + Waiter) */}
+                <Button onClick={handleAddNew} className="flex items-center gap-2">
+                    <Plus size={20} />
+                    Nuevo Plato
+                </Button>
             </div>
 
             {/* Filters Bar */}
@@ -174,16 +172,15 @@ export default function Dishes() {
                                     )}
 
                                     {/* Actions - Always visible on mobile, hover on desktop */}
-                                    {isAdmin && (
-                                        <div className="absolute top-2 right-2 flex gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                            <button onClick={() => handleEdit(dish)} className="p-2 bg-white/90 rounded-full shadow-sm hover:bg-white text-slate-700 hover:text-pastel-blue transition-colors">
-                                                <Edit2 size={16} />
-                                            </button>
-                                            <button onClick={() => confirmDelete(dish.id)} className="p-2 bg-white/90 rounded-full shadow-sm hover:bg-white text-red-500 hover:text-red-600 transition-colors">
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    )}
+                                    {/* Actions - Always visible on mobile, hover on desktop */}
+                                    <div className="absolute top-2 right-2 flex gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                        <button onClick={() => handleEdit(dish)} className="p-2 bg-white/90 rounded-full shadow-sm hover:bg-white text-slate-700 hover:text-pastel-blue transition-colors">
+                                            <Edit2 size={16} />
+                                        </button>
+                                        <button onClick={() => confirmDelete(dish.id)} className="p-2 bg-white/90 rounded-full shadow-sm hover:bg-white text-red-500 hover:text-red-600 transition-colors">
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div>

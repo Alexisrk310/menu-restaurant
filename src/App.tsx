@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastProvider } from './components/ui/Toast';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import PublicLayout from './layouts/PublicLayout';
 import AdminLayout from './layouts/AdminLayout';
 import PublicMenu from './pages/PublicMenu';
@@ -25,11 +26,20 @@ function App() {
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="dishes" element={<Dishes />} />
-            <Route path="categories" element={<Categories />} />
-            <Route path="qr" element={<QrCodeGenerator />} />
-            <Route path="users" element={<Users />} />
+
+            {/* Admin Dashboard & Users - ADMIN ONLY */}
+            <Route element={<ProtectedRoute allowedRoles={['admin']} fallbackPath="/admin/dishes" />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="users" element={<Users />} />
+            </Route>
+
+            {/* Dishes, Categories, QR - ADMIN & WAITER */}
+            <Route element={<ProtectedRoute allowedRoles={['admin', 'waiter']} />}>
+              <Route path="dishes" element={<Dishes />} />
+              <Route path="categories" element={<Categories />} />
+              <Route path="qr" element={<QrCodeGenerator />} />
+            </Route>
+
           </Route>
 
           {/* Catch all */}

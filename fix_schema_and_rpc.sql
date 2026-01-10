@@ -133,16 +133,31 @@ $$ language plpgsql;
 alter table public.dishes enable row level security;
 alter table public.categories enable row level security;
 
--- Dishes: Anyone can read (customers/waiters), but only Admins can write
+-- Dishes: Anyone can read (customers/waiters/admins)
 drop policy if exists "Public dishes read access" on public.dishes;
 create policy "Public dishes read access" on public.dishes for select using (true);
 
-drop policy if exists "Admins manage dishes" on public.dishes;
-create policy "Admins manage dishes" on public.dishes for all using (public.is_admin());
+-- Dishes: Admins AND Waiters can manage (Insert/Update/Delete)
+-- We use a check for either role.
+drop policy if exists "Staff manage dishes" on public.dishes;
+create policy "Staff manage dishes" on public.dishes for all using (
+  exists (
+    select 1 from public.profiles
+    where id = auth.uid()
+    and role in ('admin', 'waiter')
+  )
+);
 
--- Categories: Anyone can read, but only Admins can write
+-- Categories: Anyone can read
 drop policy if exists "Public categories read access" on public.categories;
 create policy "Public categories read access" on public.categories for select using (true);
 
-drop policy if exists "Admins manage categories" on public.categories;
-create policy "Admins manage categories" on public.categories for all using (public.is_admin());
+-- Categories: Admins AND Waiters can manage
+drop policy if exists "Staff manage categories" on public.categories;
+create policy "Staff manage categories" on public.categories for all using (
+  exists (
+    select 1 from public.profiles
+    where id = auth.uid()
+    and role in ('admin', 'waiter')
+  )
+);
