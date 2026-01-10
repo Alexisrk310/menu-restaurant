@@ -27,12 +27,8 @@ export default function AdminLayout() {
             return;
         }
 
-        // If session exists but NOT admin or waiter, alert and logout/redirect
-        if (role !== 'admin' && role !== 'waiter') {
-            alert("Acceso Denegado: Se requieren permisos de Administrador o Mesero.");
-            supabase.auth.signOut();
-            navigate('/admin/login');
-        }
+        // We rely on ProtectedRoute to handle role-based access control inside the Outlet.
+        // The Sidebar will just conditionally render items based on role.
     }, [session, role, loading, navigate]);
 
     const handleLogout = async () => {
