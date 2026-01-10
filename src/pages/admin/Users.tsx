@@ -31,6 +31,7 @@ export default function Users() {
     const [formData, setFormData] = useState({
         email: '',
         password: '',
+        confirmPassword: '',
         first_name: '',
         last_name: ''
     });
@@ -74,7 +75,7 @@ export default function Users() {
 
     const handleAddNew = () => {
         setEditingUser(null);
-        setFormData({ email: '', password: '', first_name: '', last_name: '' });
+        setFormData({ email: '', password: '', confirmPassword: '', first_name: '', last_name: '' });
         setSelectedRole('waiter');
         setIsModalOpen(true);
     };
@@ -85,6 +86,7 @@ export default function Users() {
         setFormData({
             email: user.email,
             password: '', // Password not editable directly here usually, but keeping structure
+            confirmPassword: '',
             first_name: user.first_name || '',
             last_name: user.last_name || ''
         });
@@ -126,6 +128,10 @@ export default function Users() {
                 // Create User
                 if (!formData.email || !formData.password || !formData.first_name || !formData.last_name) {
                     addToast('Por favor completa todos los campos', 'error');
+                    return;
+                }
+                if (formData.password !== formData.confirmPassword) {
+                    addToast('Las contraseñas no coinciden', 'error');
                     return;
                 }
                 await api.users.createUser({
@@ -358,15 +364,26 @@ export default function Users() {
                             className={editingUser ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : ''}
                         />
                         {!editingUser && (
-                            <Input
-                                type="password"
-                                label="Contraseña"
-                                value={formData.password}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, password: e.target.value })}
-                                required
-                                minLength={6}
-                                placeholder="Mínimo 6 caracteres"
-                            />
+                            <div className="grid grid-cols-2 gap-4">
+                                <Input
+                                    type="password"
+                                    label="Contraseña"
+                                    value={formData.password}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, password: e.target.value })}
+                                    required
+                                    minLength={6}
+                                    placeholder="Mínimo 6 caracteres"
+                                />
+                                <Input
+                                    type="password"
+                                    label="Confirmar Contraseña"
+                                    value={(formData as any).confirmPassword}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                    required
+                                    minLength={6}
+                                    placeholder="Repite la contraseña"
+                                />
+                            </div>
                         )}
                         <hr className="border-slate-100" />
                     </div>

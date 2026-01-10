@@ -35,10 +35,26 @@ export function useAuth() {
                         // This handles cases where token is stale/invalid for RLS immediately after signup
                         console.log("Retries exhausted, forcing session refresh...");
                         return getRole(userId, 0, 0, true);
+                    } else if (forceRefresh) {
+                        // If we forced refresh and it FAILED again to get data (error still exists), we return null.
+                        // BUT, if we forced refresh and now we DO get data (success path below), we usually just return data.
+                        // However, user requested a RELOAD to ensure app sync.
+                        // The error block means even after refresh we failed. So we return null here.
+                        return null;
                     }
                     return null;
                 }
-                return data?.role || null;
+
+                // SUCCESS CASE
+                if (data?.role) {
+                    if (forceRefresh) {
+                        console.log("Session recovery successful. Reloading to sync app state...");
+                        window.location.reload();
+                        return null; // Will trigger reload, return value doesn't matter much but safe to null
+                    }
+                    return data.role;
+                }
+                return null;
             } catch (err) {
                 console.error("Exception fetching role:", err);
                 if (retries > 0) {
