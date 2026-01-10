@@ -100,8 +100,9 @@ export const api = {
             return data;
         },
         updateRole: async (id: string, role: string) => {
-            const { data, error } = await supabase.from('profiles').update({ role }).eq('id', id).select().single();
+            const { data, error } = await supabase.from('profiles').update({ role }).eq('id', id).select().maybeSingle();
             if (error) throw error;
+            if (!data) throw new Error("No se pudo encontrar el usuario para actualizar. Verifica que exista.");
             return data;
         },
         // Note: Creating a user with password requires Supabase Admin API or Client SignUp (which changes session).
@@ -145,6 +146,17 @@ export const api = {
             }
 
             return authData.user;
+        },
+        update: async (id: string, updates: any) => {
+            const { data, error } = await supabase.from('profiles').update(updates).eq('id', id).select().maybeSingle();
+            if (error) throw error;
+            if (!data) throw new Error("No se pudo actualizar el usuario. Verifica que exista.");
+            return data;
+        },
+        delete: async (id: string) => {
+            const { error } = await supabase.from('profiles').delete().eq('id', id);
+            if (error) throw error;
+            return;
         }
     }
 };

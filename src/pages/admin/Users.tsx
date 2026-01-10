@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Users as UsersIcon, Shield, Search, Edit2, Plus } from 'lucide-react';
+import { Users as UsersIcon, Shield, Search, Edit2, Plus, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
+import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { useToast } from '../../components/ui/Toast';
 import { Input } from '../../components/ui/Input';
 
@@ -18,7 +19,11 @@ export default function Users() {
     const [editingUser, setEditingUser] = useState<any>(null); // If null, we are creating
     const [selectedRole, setSelectedRole] = useState('waiter');
 
-    // Create Form State
+    // Delete State
+    const [userToDelete, setUserToDelete] = useState<any>(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+    // Create/Edit Form State
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -60,7 +65,32 @@ export default function Users() {
     const handleEdit = (user: any) => {
         setEditingUser(user);
         setSelectedRole(user.role);
+        setFormData({
+            email: user.email,
+            password: '', // Password not editable directly here usually, but keeping structure
+            first_name: user.first_name || '',
+            last_name: user.last_name || ''
+        });
         setIsModalOpen(true);
+    };
+
+    const handleDeleteClick = (user: any) => {
+        setUserToDelete(user);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!userToDelete) return;
+        try {
+            await api.users.delete(userToDelete.id);
+            addToast('Usuario eliminado correctamente', 'success');
+            loadUsers();
+            setIsDeleteModalOpen(false);
+            setUserToDelete(null);
+        } catch (error: any) {
+            console.error(error);
+            addToast('Error al eliminar usuario', 'error');
+        }
     };
 
     const handleSave = async (e: React.FormEvent) => {
@@ -68,9 +98,13 @@ export default function Users() {
 
         try {
             if (editingUser) {
-                // Update Role
-                await api.users.updateRole(editingUser.id, selectedRole);
-                addToast('Rol actualizado correctamente', 'success');
+                // Update User Details & Role
+                await api.users.update(editingUser.id, {
+                    first_name: formData.first_name,
+                    last_name: formData.last_name,
+                    role: selectedRole
+                });
+                addToast('Usuario actualizado correctamente', 'success');
             } else {
                 // Create User
                 if (!formData.email || !formData.password || !formData.first_name || !formData.last_name) {
@@ -167,13 +201,22 @@ export default function Users() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <button
-                                                onClick={() => handleEdit(user)}
-                                                className="p-2 text-slate-400 hover:text-pastel-blue hover:bg-pastel-blue/10 rounded-lg transition-colors inline-block"
-                                                title="Editar Rol"
-                                            >
-                                                <Edit2 size={18} />
-                                            </button>
+                                            <div className="flex justify-end gap-2">
+                                                <button
+                                                    onClick={() => handleEdit(user)}
+                                                    className="p-2 text-slate-400 hover:text-pastel-blue hover:bg-pastel-blue/10 rounded-lg transition-colors"
+                                                    title="Editar Usuario"
+                                                >
+                                                    <Edit2 size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteClick(user)}
+                                                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Eliminar Usuario"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </motion.tr>
                                 ))}
@@ -204,12 +247,20 @@ export default function Users() {
                                         <p className="text-sm text-slate-500 break-all">{user.email}</p>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => handleEdit(user)}
-                                    className="p-2 text-slate-400 hover:text-pastel-blue hover:bg-pastel-blue/10 rounded-lg transition-colors"
-                                >
-                                    <Edit2 size={18} />
-                                </button>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handleEdit(user)}
+                                        className="p-2 text-slate-400 hover:text-pastel-blue hover:bg-pastel-blue/10 rounded-lg transition-colors"
+                                    >
+                                        <Edit2 size={18} />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteClick(user)}
+                                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="flex items-center justify-between border-t border-slate-50 pt-3">
@@ -239,32 +290,34 @@ export default function Users() {
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title={editingUser ? "Editar Rol de Usuario" : "Crear Nuevo Usuario"}
+                title={editingUser ? "Editar Usuario" : "Crear Nuevo Usuario"}
             >
                 <form onSubmit={handleSave} className="space-y-6">
-                    {!editingUser ? (
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <Input
-                                    label="Nombre"
-                                    value={formData.first_name}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, first_name: e.target.value })}
-                                    required
-                                />
-                                <Input
-                                    label="Apellido"
-                                    value={formData.last_name}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, last_name: e.target.value })}
-                                    required
-                                />
-                            </div>
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
                             <Input
-                                type="email"
-                                label="Correo Electrónico"
-                                value={formData.email}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, email: e.target.value })}
+                                label="Nombre"
+                                value={formData.first_name}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, first_name: e.target.value })}
                                 required
                             />
+                            <Input
+                                label="Apellido"
+                                value={formData.last_name}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, last_name: e.target.value })}
+                                required
+                            />
+                        </div>
+                        <Input
+                            type="email"
+                            label="Correo Electrónico"
+                            value={formData.email}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, email: e.target.value })}
+                            required
+                            disabled={!!editingUser} // Can't edit email easily without auth migration
+                            className={editingUser ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : ''}
+                        />
+                        {!editingUser && (
                             <Input
                                 type="password"
                                 label="Contraseña"
@@ -274,13 +327,9 @@ export default function Users() {
                                 minLength={6}
                                 placeholder="Mínimo 6 caracteres"
                             />
-                            <hr className="border-slate-100" />
-                        </div>
-                    ) : (
-                        <p className="text-sm text-slate-500 mb-4">
-                            Estás editando el rol para <strong className="text-charcoal">{editingUser?.email}</strong>
-                        </p>
-                    )}
+                        )}
+                        <hr className="border-slate-100" />
+                    </div>
 
                     <div>
                         <span className="block text-sm font-medium text-slate-700 mb-3">Asignar Rol</span>
@@ -324,6 +373,17 @@ export default function Users() {
                     </div>
                 </form>
             </Modal>
+
+            <ConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleDeleteConfirm}
+                title="Eliminar Usuario"
+                message={`¿Estás seguro de que deseas eliminar al usuario ${userToDelete?.first_name} ${userToDelete?.last_name}? Esta acción no se puede deshacer.`}
+                confirmText="Sí, Eliminar"
+                cancelText="Cancelar"
+                variant="danger"
+            />
         </div>
     );
 }
