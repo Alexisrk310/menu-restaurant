@@ -125,3 +125,24 @@ begin
   join public.profiles p on p.id = au.id;
 end;
 $$ language plpgsql;
+
+-- 6. Strict Protections for Dishes and Categories
+-- Explicitly revoke write access for non-admins if table policies are loose, or add policies.
+-- Assuming dishes/categories have RLS enabled. If not, we enable it.
+
+alter table public.dishes enable row level security;
+alter table public.categories enable row level security;
+
+-- Dishes: Anyone can read (customers/waiters), but only Admins can write
+drop policy if exists "Public dishes read access" on public.dishes;
+create policy "Public dishes read access" on public.dishes for select using (true);
+
+drop policy if exists "Admins manage dishes" on public.dishes;
+create policy "Admins manage dishes" on public.dishes for all using (public.is_admin());
+
+-- Categories: Anyone can read, but only Admins can write
+drop policy if exists "Public categories read access" on public.categories;
+create policy "Public categories read access" on public.categories for select using (true);
+
+drop policy if exists "Admins manage categories" on public.categories;
+create policy "Admins manage categories" on public.categories for all using (public.is_admin());

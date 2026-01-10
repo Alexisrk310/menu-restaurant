@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Users as UsersIcon, Shield, Search, Edit2, Plus, Trash2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
 import { Button } from '../../components/ui/Button';
@@ -33,6 +34,15 @@ export default function Users() {
     });
 
     const { addToast } = useToast();
+    const navigate = useNavigate();
+    const { role, loading } = useAuth();
+
+    useEffect(() => {
+        if (!loading && role !== 'admin') {
+            addToast('No tienes permiso para ver esta sección', 'error');
+            navigate('/admin/dishes');
+        }
+    }, [role, loading, navigate, addToast]);
 
     useEffect(() => {
         loadUsers();

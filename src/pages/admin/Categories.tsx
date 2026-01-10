@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { Plus, Trash2, List, Search, Edit2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
@@ -19,6 +20,8 @@ export default function Categories() {
     const [editingCategory, setEditingCategory] = useState<any>(null);
     const { addToast } = useToast();
     const location = useLocation();
+    const { role } = useAuth();
+    const isAdmin = role === 'admin';
 
     // Confirmation Modal State
     const [confirmOpen, setConfirmOpen] = useState(false);
@@ -122,10 +125,12 @@ export default function Categories() {
                     <h2 className="text-2xl font-display font-bold text-charcoal">Categorías</h2>
                     <p className="text-slate-500">Organiza las secciones del menú</p>
                 </div>
-                <Button onClick={() => handleOpenModal()} className="flex items-center gap-2">
-                    <Plus size={20} />
-                    Nueva Categoría
-                </Button>
+                {isAdmin && (
+                    <Button onClick={() => handleOpenModal()} className="flex items-center gap-2">
+                        <Plus size={20} />
+                        Nueva Categoría
+                    </Button>
+                )}
             </div>
 
             {/* Search Bar */}
@@ -169,22 +174,24 @@ export default function Categories() {
                                             {!cat.is_active && <span className="text-xs text-red-500 font-bold">DESHABILITADA</span>}
                                         </div>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => handleOpenModal(cat)}
-                                            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                                            title="Editar"
-                                        >
-                                            <Edit2 size={18} />
-                                        </button>
-                                        <button
-                                            onClick={() => confirmDelete(cat.id)}
-                                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                            title="Eliminar"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
+                                    {isAdmin && (
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => handleOpenModal(cat)}
+                                                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                                title="Editar"
+                                            >
+                                                <Edit2 size={18} />
+                                            </button>
+                                            <button
+                                                onClick={() => confirmDelete(cat.id)}
+                                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                title="Eliminar"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
+                                    )}
                                 </motion.div>
                             ))}
                         </AnimatePresence>
