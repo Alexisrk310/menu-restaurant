@@ -36,21 +36,38 @@ export function useAuth() {
                         console.log("Retries exhausted, forcing session refresh...");
                         return getRole(userId, 0, 0, true);
                     } else if (forceRefresh) {
-                        // If we forced refresh and it FAILED again to get data (error still exists), we return null.
-                        // BUT, if we forced refresh and now we DO get data (success path below), we usually just return data.
-                        // However, user requested a RELOAD to ensure app sync.
-                        // The error block means even after refresh we failed. So we return null here.
-                        return null;
+                        // We forced refresh and it STILL failed.
+                        // Try ONE reload of the page, to verify if it's a browser state issue.
+                        const hasReloaded = sessionStorage.getItem('auth_retry_reloaded');
+                        if (!hasReloaded) {
+                            console.log("Role fetch failed after refresh. Attempting page reload...");
+                            sessionStorage.setItem('auth_retry_reloaded', 'true');
+                            window.location.reload();
+                            return null;
+                        } else {
+                            // We already reloaded and it still fails.
+                            console.error("Critical Auth Error: Role not found even after reload. Signing out.");
+                            sessionStorage.removeItem('auth_retry_reloaded');
+                            await supabase.auth.signOut();
+                            return null;
+                        }
                     }
                     return null;
                 }
 
                 // SUCCESS CASE
+                sessionStorage.removeItem('auth_retry_reloaded');
+
                 if (data?.role) {
-                    if (forceRefresh) {
+                    // If we forced refresh (and succeeded), we reload just to be super safe 
+                    // and ensure all app state (sockets, listeners) are fresh.
+                    // But we check if we just reloaded to strictly avoid loops even here.
+                    const hasReloaded = sessionStorage.getItem('auth_retry_reloaded');
+                    if (!hasReloaded) {
                         console.log("Session recovery successful. Reloading to sync app state...");
+                        sessionStorage.setItem('auth_retry_reloaded', 'true');
                         window.location.reload();
-                        return null; // Will trigger reload, return value doesn't matter much but safe to null
+                        return null;
                     }
                     return data.role;
                 }
