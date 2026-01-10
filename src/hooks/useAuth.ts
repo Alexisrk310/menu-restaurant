@@ -10,11 +10,10 @@ export function useAuth() {
     useEffect(() => {
         let mounted = true;
 
-        const getRole = async (userId: string) => {
+        const getRole = async (userId: string, retries = 3, delay = 500) => {
             try {
                 // Try to get from local storage or cache if possible to avoid blip, 
                 // but for security we verify with DB. 
-                // We could implement simple caching here if needed.
                 const { data, error } = await supabase
                     .from('profiles')
                     .select('role')
@@ -23,14 +22,20 @@ export function useAuth() {
 
                 if (error) {
                     console.error("Error fetching role:", error);
-                    return 'waiter'; // Safe fallback or null? Let's stay safe: null might block access. 
-                    // Actually, if DB fails but Auth is good, we might want to allow basic access or retry.
-                    // For now, return null to force re-check or fail safe.
+                    // If error and we have retries left, wait and retry
+                    if (retries > 0) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        return getRole(userId, retries - 1, delay * 2);
+                    }
                     return null;
                 }
                 return data?.role || null;
             } catch (err) {
                 console.error("Exception fetching role:", err);
+                if (retries > 0) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return getRole(userId, retries - 1, delay * 2);
+                }
                 return null;
             }
         };

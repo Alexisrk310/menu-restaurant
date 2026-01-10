@@ -134,6 +134,9 @@ export const api = {
             const { data: authData, error: authError } = await tempClient.auth.signUp({
                 email: userData.email,
                 password: userData.password,
+                options: {
+                    emailRedirectTo: import.meta.env.VITE_APP_DOMAIN
+                }
             });
 
             if (authError) throw authError;
