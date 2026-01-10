@@ -15,6 +15,11 @@ begin
     if not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'profiles' and column_name = 'role') then
         alter table public.profiles add column role text default 'waiter';
     end if;
+
+    -- Add updated_at if it doesn't exist (Fix for PGRST204)
+    if not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'profiles' and column_name = 'updated_at') then
+        alter table public.profiles add column updated_at timestamptz default now();
+    end if;
 end $$;
 
 -- 2. Update the Deletion Function to handle dependencies
