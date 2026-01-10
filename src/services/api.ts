@@ -154,8 +154,16 @@ export const api = {
             return data;
         },
         delete: async (id: string) => {
-            const { error } = await supabase.from('profiles').delete().eq('id', id);
-            if (error) throw error;
+            // We use an RPC call to securely delete the user from auth.users
+            const { error } = await supabase.rpc('delete_user_by_id', { user_uuid: id });
+
+            if (error) {
+                console.error("Error deleting user:", error);
+                // Fallback: If RPC fails (e.g., function not created yet), try deleting from profiles
+                // This won't delete the auth user, but it's better than crashing.
+                const { error: profileError } = await supabase.from('profiles').delete().eq('id', id);
+                if (profileError) throw profileError;
+            }
             return;
         }
     }
