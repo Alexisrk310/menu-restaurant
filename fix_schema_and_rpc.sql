@@ -26,6 +26,7 @@ end $$;
 alter table public.profiles enable row level security;
 
 -- Policy: Admins can do everything on profiles
+drop policy if exists "Admins can manage all profiles" on public.profiles;
 create policy "Admins can manage all profiles"
 on public.profiles
 for all
@@ -36,16 +37,24 @@ using (
 );
 
 -- Policy: Users can read their own profile (usually exists, but ensuring it)
+drop policy if exists "Users can read own profile" on public.profiles;
 create policy "Users can read own profile"
 on public.profiles
 for select
 using ( auth.uid() = id );
 
 -- Policy: Users can update their own profile
+drop policy if exists "Users can update own profile" on public.profiles;
 create policy "Users can update own profile"
 on public.profiles
 for update
 using ( auth.uid() = id );
+
+-- 4. Restore Admin Role for the main account (Safety measure)
+-- Since we added the column with default 'waiter', your old admin account might have been downgraded.
+update public.profiles
+set role = 'admin'
+where id in (select id from auth.users where email = 'admin@gmail.com');
 
 -- 2. Update the Deletion Function to handle dependencies
 -- We explicitly delete the profile first to avoid Foreign Key violations if CASCADE is not configured.
