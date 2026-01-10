@@ -10,14 +10,8 @@ export function useAuth() {
     useEffect(() => {
         let mounted = true;
 
-        const getRole = async (userId: string, retries = 3, delay = 500, forceRefresh = false) => {
+        const getRole = async (userId: string, retries = 3, delay = 500) => {
             try {
-                // Force refresh if requested (e.g. after retries failed)
-                if (forceRefresh) {
-                    const { error: refreshError } = await supabase.auth.refreshSession();
-                    if (refreshError) console.error("Session refresh failed:", refreshError);
-                }
-
                 const { data, error } = await supabase
                     .from('profiles')
                     .select('role')
@@ -29,54 +23,35 @@ export function useAuth() {
 
                     if (retries > 0) {
                         await new Promise(resolve => setTimeout(resolve, delay));
-                        return getRole(userId, retries - 1, delay * 2, false);
-                    } else if (!forceRefresh) {
-                        // If retries exhausted, try ONE final attempt with a forced session refresh
-                        // This handles cases where token is stale/invalid for RLS immediately after signup
-                        console.log("Retries exhausted, forcing session refresh...");
-                        return getRole(userId, 0, 0, true);
-                    } else if (forceRefresh) {
-                        // We forced refresh and it STILL failed.
-                        // Try ONE reload of the page, to verify if it's a browser state issue.
+                        return getRole(userId, retries - 1, delay * 2);
+                    } else {
+                        // Retries exhausted.
+                        // Check if we already tried reloading to fix this.
                         const hasReloaded = sessionStorage.getItem('auth_retry_reloaded');
                         if (!hasReloaded) {
-                            console.log("Role fetch failed after refresh. Attempting page reload...");
+                            console.log("Role fetch failed. Attempting one-time page reload...");
                             sessionStorage.setItem('auth_retry_reloaded', 'true');
                             window.location.reload();
                             return null;
                         } else {
-                            // We already reloaded and it still fails.
-                            console.error("Critical Auth Error: Role not found even after reload. Signing out.");
+                            // Already reloaded and still failing.
+                            console.error("Critical Auth Error: Role not found after reload. Signing out protection.");
                             sessionStorage.removeItem('auth_retry_reloaded');
                             await supabase.auth.signOut();
                             return null;
                         }
                     }
-                    return null;
                 }
 
-                // SUCCESS CASE
+                // Success - clear flag
                 sessionStorage.removeItem('auth_retry_reloaded');
+                return data?.role || null;
 
-                if (data?.role) {
-                    // If we forced refresh (and succeeded), we reload just to be super safe 
-                    // and ensure all app state (sockets, listeners) are fresh.
-                    // But we check if we just reloaded to strictly avoid loops even here.
-                    const hasReloaded = sessionStorage.getItem('auth_retry_reloaded');
-                    if (!hasReloaded) {
-                        console.log("Session recovery successful. Reloading to sync app state...");
-                        sessionStorage.setItem('auth_retry_reloaded', 'true');
-                        window.location.reload();
-                        return null;
-                    }
-                    return data.role;
-                }
-                return null;
             } catch (err) {
                 console.error("Exception fetching role:", err);
                 if (retries > 0) {
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    return getRole(userId, retries - 1, delay * 2, false);
+                    return getRole(userId, retries - 1, delay * 2);
                 }
                 return null;
             }
@@ -107,6 +82,12 @@ export function useAuth() {
                 if (!mounted) return;
 
                 // console.log("Auth event:", event);
+
+                if (event === 'USER_UPDATED') {
+                    console.log("User verification status changed. Reloading...");
+                    window.location.reload();
+                    return;
+                }
 
                 if (newSession) {
                     setSession(newSession);
