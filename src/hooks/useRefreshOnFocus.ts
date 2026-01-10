@@ -9,7 +9,9 @@ export function useRefreshOnFocus(refetch: () => Promise<any> | void) {
 
     useEffect(() => {
         const onFocus = () => {
-            refetchRef.current();
+            if (document.visibilityState === 'visible') {
+                refetchRef.current();
+            }
         };
 
         window.addEventListener('focus', onFocus);
